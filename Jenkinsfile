@@ -1,11 +1,9 @@
 node {
-    
     def mvnHome = tool name: 'Maven3', type: 'maven'
     def jdkHome = tool name: 'Java21', type: 'hudson.model.JDK'
     env.PATH = "${jdkHome}/bin:${mvnHome}/bin:${env.PATH}"
 
-    
-    env.IMAGE_NAME = "java-app"
+    env.IMAGE_NAME = "scripted-pipeline-app"
     env.DOCKER_HUB_USER = "ahmedhany28"
 
     try {
@@ -13,8 +11,6 @@ node {
             echo "Workspace dir: ${env.WORKSPACE}"
             sh 'pwd'
             sh 'ls -la'
-          
-            sh 'if [ -f pom.xml ]; then echo "pom.xml found"; else echo "pom.xml NOT found"; fi'
         }
 
         stage('Check Build Number') {
@@ -26,13 +22,16 @@ node {
 
         stage('Build with Maven') {
             echo 'Building the Java application...'
-          
-            sh "'${mvnHome}/bin/mvn' clean package -DskipTests"
+            dir('Scripted-Pipeline') {
+                sh "'${mvnHome}/bin/mvn' clean package -DskipTests"
+            }
         }
 
         stage('Docker Build') {
             echo 'Building Docker image...'
-            sh "docker build -t ${env.IMAGE_NAME}:${env.BUILD_NUMBER} ."
+            dir('Scripted-Pipeline') {
+                sh "docker build -t ${env.IMAGE_NAME}:${env.BUILD_NUMBER} ."
+            }
         }
 
         stage('Docker Push') {

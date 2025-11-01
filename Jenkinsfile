@@ -1,12 +1,12 @@
 node {
- 
-    def MAVEN_HOME = tool name: 'Maven3'
-    def JAVA_HOME = tool name: 'Java21'
-    env.PATH = "${MAVEN_HOME}/bin:${JAVA_HOME}/bin:${env.PATH}"
+    // Define tools
+    def mvnHome = tool 'Maven3'
+    def jdkHome = tool 'Java21'
+    env.PATH = "${jdkHome}/bin:${mvnHome}/bin:${env.PATH}"
 
-    
-    def IMAGE_NAME = "java-app-scripted"
-    def DOCKER_HUB_USER = "ahmedhany28"
+    // Define environment variables
+    env.IMAGE_NAME = "java-app"
+    env.DOCKER_HUB_USER = "ahmedhany28"
 
     try {
         stage('Check Build Number') {
@@ -23,7 +23,7 @@ node {
 
         stage('Docker Build') {
             echo 'Building Docker image...'
-            sh "docker build -t ${IMAGE_NAME}:${env.BUILD_NUMBER} ."
+            sh "docker build -t ${env.IMAGE_NAME}:${env.BUILD_NUMBER} ."
         }
 
         stage('Docker Push') {
@@ -33,14 +33,12 @@ node {
                         echo "Logging into Docker Hub..."
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         echo "Tagging image..."
-                        docker tag java-app:${BUILD_NUMBER} $DOCKER_USER/java-app:${BUILD_NUMBER}
-                        echo "Pushing image..."
-                        docker push $DOCKER_USER/java-app:${BUILD_NUMBER}
+                        docker tag ${IMAGE_NAME}:${BUILD_NUMBER} $DOCKER_USER/${IMAGE_NAME}:${BUILD_NUMBER}
+                        echo "Pushing image to Docker Hub..."
+                        docker push $DOCKER_USER/${IMAGE_NAME}:${BUILD_NUMBER}
                         docker logout
                     '''
                 }
-            } else {
-                echo "Skipping Docker push because build number is less than 5."
             }
         }
 
@@ -52,14 +50,13 @@ node {
             """
         }
 
-       
         echo 'Build SUCCESS!'
+
     } catch (err) {
-       
-        echo "Build FAILED."
-        error err.getMessage()
+        echo "Build FAILED: ${err}"
+        currentBuild.result = 'FAILURE'
+
     } finally {
-       
         echo 'Cleaning workspace...'
         cleanWs()
     }

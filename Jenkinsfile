@@ -1,10 +1,10 @@
 node {
-    // Define tools
-    def mvnHome = tool 'Maven3'
-    def jdkHome = tool 'Java21'
+    
+    def mvnHome = tool name: 'Maven3', type: 'maven'
+    def jdkHome = tool name: 'Java21', type: 'hudson.model.JDK'
     env.PATH = "${jdkHome}/bin:${mvnHome}/bin:${env.PATH}"
 
-    // Define environment variables
+   
     env.IMAGE_NAME = "java-app"
     env.DOCKER_HUB_USER = "ahmedhany28"
 
@@ -18,7 +18,8 @@ node {
 
         stage('Build with Maven') {
             echo 'Building the Java application...'
-            sh 'mvn clean package -DskipTests'
+            
+            sh "'${mvnHome}/bin/mvn' clean package -DskipTests"
         }
 
         stage('Docker Build') {
@@ -28,7 +29,11 @@ node {
 
         stage('Docker Push') {
             if (env.BUILD_NUMBER.toInteger() >= 5) {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     sh '''
                         echo "Logging into Docker Hub..."
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin

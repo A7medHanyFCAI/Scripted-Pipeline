@@ -1,11 +1,11 @@
 node {
-    // === Setup tools ===
+   
     def mvnHome = tool name: 'Maven3', type: 'maven'
     def jdkHome = tool name: 'Java21', type: 'hudson.model.JDK'
     env.PATH = "${jdkHome}/bin:${mvnHome}/bin:${env.PATH}"
 
-    // === Environment variables ===
-    env.IMAGE_NAME = "java-app"
+   
+    env.IMAGE_NAME = "scripted-java-app"
     env.DOCKER_HUB_USER = "ahmedhany28"
 
     try {
@@ -54,14 +54,14 @@ node {
             """
         }
 
-        echo '✅ Build SUCCESS!'
+        echo 'Build SUCCESS!'
 
     } catch (err) {
-        echo "❌ Build FAILED: ${err}"
+        echo "Build FAILED: ${err}"
         currentBuild.result = 'FAILURE'
         throw err
     } finally {
-        echo '🧹 Cleaning workspace...'
+        echo 'Cleaning workspace...'
         cleanWs()
     }
 }
